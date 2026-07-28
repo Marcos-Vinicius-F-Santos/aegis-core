@@ -1,3 +1,4 @@
+import time
 from fastapi import FastAPI
 from models import ChatRequest, ChatResponse
 from router import router
@@ -9,8 +10,14 @@ app = FastAPI(
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):
+	start_time = time.time()
 	response = router.chat(request.message)
+	elapsed = round(time.time() - start_time, 2)
 	
 	return ChatResponse(
-		response=response
+		agent="cortex",
+		status="success",
+		response=response,
+		execution_time=elapsed
 	)
+
