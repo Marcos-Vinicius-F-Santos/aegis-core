@@ -1,0 +1,25 @@
+# Ptyhon
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environment
+.venv/
+venv/
+
+# Logs
+logs/
+*/log
+
+# Environment
+.env
+
+# Local models
+models/
+
+# IDE
+.vscode/
+,idea/
+
+# System
+.DS_Store
