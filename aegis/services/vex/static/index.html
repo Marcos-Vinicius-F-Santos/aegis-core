@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aegis-Core | Local AI Workspace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0b0f19;
+            --bg-card: #131b2e;
+            --bg-card-hover: #1c273e;
+            --bg-input: #172033;
+            --border-color: #23314d;
+            --text-main: #f1f5f9;
+            --text-muted: #94a3b8;
+            --primary: #6366f1;
+            --primary-glow: rgba(99, 102, 241, 0.35);
+            --accent-cyan: #06b6d4;
+            --accent-emerald: #10b981;
+            --user-bubble: #1e293b;
+            --bot-bubble: #172554;
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'Fira Code', monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font-main);
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background-color: var(--bg-card);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            gap: 24px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 16px var(--primary-glow);
+            font-weight: 700;
+            font-size: 20px;
+            color: #fff;
+        }
+
+        .brand-title {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #fff, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-subtitle {
+            font-size: 11px;
+            color: var(--accent-cyan);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .system-status {
+            background-color: var(--bg-dark);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .status-header {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
+        .badge-green {
+            background-color: rgba(16, 185, 129, 0.15);
+            color: var(--accent-emerald);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-purple {
+            background-color: rgba(99, 102, 241, 0.15);
+            color: var(--primary);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .agent-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .agent-card {
+            padding: 10px 12px;
+            border-radius: 10px;
+            background-color: transparent;
+            border: 1px solid transparent;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .agent-card.active {
+            background-color: var(--bg-card-hover);
+            border-color: var(--border-color);
+        }
+
+        .agent-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .dot-online {
+            background-color: var(--accent-emerald);
+            box-shadow: 0 0 8px var(--accent-emerald);
+        }
+
+        .dot-offline {
+            background-color: var(--text-muted);
+            opacity: 0.4;
+        }
+
+        .agent-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .agent-name {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .agent-desc {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* Main Workspace */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: var(--bg-dark);
+        }
+
+        /* Header */
+        .chat-header {
+            padding: 16px 32px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: rgba(11, 15, 25, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .chat-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .btn-clear {
+            background-color: transparent;
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-clear:hover {
+            color: var(--text-main);
+            background-color: var(--bg-card-hover);
+            border-color: var(--text-muted);
+        }
+
+        /* Chat Log */
+        .chat-log {
+            flex: 1;
+            padding: 32px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .welcome-card {
+            max-width: 650px;
+            margin: 40px auto;
+            background: linear-gradient(135deg, rgba(30, 41, 59, 0.5), rgba(19, 27, 46, 0.8));
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .welcome-icon {
+            font-size: 36px;
+        }
+
+        .welcome-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .welcome-text {
+            font-size: 14px;
+            color: var(--text-muted);
+            line-height: 1.5;
+        }
+
+        .quick-prompts {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            width: 100%;
+            margin-top: 12px;
+        }
+
+        .prompt-btn {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .prompt-btn:hover {
+            border-color: var(--primary);
+            background-color: var(--bg-card-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Message Component */
+        .message-row {
+            display: flex;
+            gap: 14px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .message-row.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-row.assistant {
+            align-self: flex-start;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 13px;
+            flex-shrink: 0;
+        }
+
+        .avatar-user {
+            background-color: #334155;
+            color: #f8fafc;
+        }
+
+        .avatar-assistant {
+            background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+            color: #fff;
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+
+        .bubble {
+            padding: 14px 18px;
+            border-radius: 14px;
+            font-size: 14px;
+            line-height: 1.6;
+            max-width: 100%;
+            word-break: break-word;
+        }
+
+        .message-row.user .bubble {
+            background-color: var(--user-bubble);
+            border: 1px solid var(--border-color);
+            border-top-right-radius: 4px;
+        }
+
+        .message-row.assistant .bubble {
+            background-color: var(--bot-bubble);
+            border: 1px solid rgba(99, 102, 241, 0.25);
+            border-top-left-radius: 4px;
+        }
+
+        .meta-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .exec-tag {
+            color: var(--accent-cyan);
+            font-family: var(--font-mono);
+            font-size: 10px;
+        }
+
+        /* Formatting Code Blocks */
+        pre {
+            background-color: #090d16;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: var(--font-mono);
+            font-size: 13px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+
+        code {
+            font-family: var(--font-mono);
+            background-color: rgba(0, 0, 0, 0.3);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* Typing Indicator */
+        .typing-loader {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 12px 18px;
+        }
+
+        .typing-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background-color: var(--text-muted);
+            animation: pulse 1.4s infinite ease-in-out both;
+        }
+
+        .typing-dot:nth-child(1) { animation-delay: -0.32s; }
+        .typing-dot:nth-child(2) { animation-delay: -0.16s; }
+
+        @keyframes pulse {
+            0%, 80%, 100% { transform: scale(0.6); opacity: 0.4; }
+            40% { transform: scale(1); opacity: 1; }
+        }
+
+        /* Input Container */
+        .input-area {
+            padding: 20px 32px 28px 32px;
+            background-color: var(--bg-dark);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .input-box {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            transition: border-color 0.2s ease;
+        }
+
+        .input-box:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 12px var(--primary-glow);
+        }
+
+        textarea {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-main);
+            font-family: var(--font-main);
+            font-size: 14px;
+            resize: none;
+            max-height: 150px;
+            min-height: 24px;
+            line-height: 1.5;
+        }
+
+        textarea::placeholder {
+            color: var(--text-muted);
+        }
+
+        .btn-send {
+            background: linear-gradient(135deg, var(--primary), var(--accent-cyan));
+            border: none;
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.1s ease, opacity 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .btn-send:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+
+        .btn-send:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-send svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .footer-note {
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">🛡️</div>
+            <div>
+                <div class="brand-title">Aegis-Core</div>
+                <div class="brand-subtitle">Local AI Ecosystem</div>
+            </div>
+        </div>
+
+        <div class="system-status">
+            <div class="status-header">Status do Sistema</div>
+            <div class="status-row">
+                <span>Servidor:</span>
+                <span class="badge badge-green">Online</span>
+            </div>
+            <div class="status-row">
+                <span>Modelo:</span>
+                <span class="badge badge-purple">llama3.2:3b</span>
+            </div>
+            <div class="status-row">
+                <span>Engine:</span>
+                <span style="color: var(--text-muted);">Ollama Local</span>
+            </div>
+        </div>
+
+        <div class="agent-list">
+            <div class="status-header" style="margin-bottom: 4px;">Agentes Disponíveis</div>
+            
+            <div class="agent-card active">
+                <div class="agent-dot dot-online"></div>
+                <div class="agent-info">
+                    <span class="agent-name">Cortex</span>
+                    <span class="agent-desc">Conversação & Contexto</span>
+                </div>
+            </div>
+
+            <div class="agent-card">
+                <div class="agent-dot dot-online"></div>
+                <div class="agent-info">
+                    <span class="agent-name">Vex</span>
+                    <span class="agent-desc">Roteamento & Gateway</span>
+                </div>
+            </div>
+
+            <div class="agent-card">
+                <div class="agent-dot dot-offline"></div>
+                <div class="agent-info">
+                    <span class="agent-name">Cortana</span>
+                    <span class="agent-desc">Desenvolvimento (Em breve)</span>
+                </div>
+            </div>
+
+            <div class="agent-card">
+                <div class="agent-dot dot-offline"></div>
+                <div class="agent-info">
+                    <span class="agent-name">Rick</span>
+                    <span class="agent-desc">Pesquisa (Em breve)</span>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="chat-header">
+            <div class="chat-title-group">
+                <span class="chat-title">Chat com Agente Cortex</span>
+                <span class="badge badge-green">IA Local Ativa</span>
+            </div>
+            <button class="btn-clear" onclick="clearChat()">Limpar Chat</button>
+        </header>
+
+        <div class="chat-log" id="chatLog">
+            <div class="welcome-card" id="welcomeCard">
+                <div class="welcome-icon">⚡</div>
+                <div class="welcome-title">Bem-vindo ao Aegis-Core</div>
+                <div class="welcome-text">
+                    Sua plataforma de inteligência artificial 100% privada e executada localmente. Converse com o agente <strong>Cortex</strong> em tempo real.
+                </div>
+                <div class="quick-prompts">
+                    <button class="prompt-btn" onclick="sendQuickPrompt('Quem é você e qual é o objetivo do Aegis-Core?')">
+                        💡 Quem é o Aegis-Core?
+                    </button>
+                    <button class="prompt-btn" onclick="sendQuickPrompt('Me explique como criar uma API simples usando Python e FastAPI.')">
+                        💻 Exemplo de código FastAPI
+                    </button>
+                    <button class="prompt-btn" onclick="sendQuickPrompt('Quais são as vantagens de executar IAs localmente?')">
+                        🔒 Vantagens da IA Local
+                    </button>
+                    <button class="prompt-btn" onclick="sendQuickPrompt('Escreva uma poesia sobre tecnologia e privacidade.')">
+                        ✍️ Poesia sobre Tecnologia
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-area">
+            <div class="input-box">
+                <textarea id="messageInput" placeholder="Digite sua mensagem para o Cortex... (Pressione Enter para enviar)" rows="1"></textarea>
+                <button class="btn-send" id="sendBtn" onclick="sendMessage()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path>
+                    </svg>
+                </button>
+            </div>
+            <div class="footer-note">Aegis-Core | Executando modelo llama3.2:3b totalmente offline via Ollama</div>
+        </div>
+    </main>
+
+    <script>
+        const chatLog = document.getElementById('chatLog');
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const welcomeCard = document.getElementById('welcomeCard');
+
+        // Auto resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+
+        // Submit on Enter
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        function sendQuickPrompt(promptText) {
+            messageInput.value = promptText;
+            sendMessage();
+        }
+
+        function clearChat() {
+            chatLog.innerHTML = '';
+            chatLog.appendChild(welcomeCard);
+            welcomeCard.style.display = 'flex';
+        }
+
+        function formatMarkdown(text) {
+            let formatted = text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+
+            // Code blocks
+            formatted = formatted.replace(/```([\s\S]*?)```/g, function(match, code) {
+                return `<pre><code>${code.trim()}</code></pre>`;
+            });
+
+            // Inline code
+            formatted = formatted.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+            // Bold
+            formatted = formatted.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+
+            // Line breaks
+            formatted = formatted.replace(/\n/g, '<br>');
+
+            return formatted;
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Hide welcome card
+            if (welcomeCard) {
+                welcomeCard.style.display = 'none';
+            }
+
+            // Append User Message
+            appendMessage('user', message);
+
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+
+            // Show Typing Indicator
+            const loaderId = appendTypingIndicator();
+            chatLog.scrollTop = chatLog.scrollHeight;
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: message })
+                });
+
+                removeTypingIndicator(loaderId);
+
+                if (!response.ok) {
+                    throw new Error(`Erro na requisição: ${response.status}`);
+                }
+
+                const data = await response.json();
+                appendMessage('assistant', data.response, data.agent, data.execution_time);
+
+            } catch (err) {
+                removeTypingIndicator(loaderId);
+                appendMessage('assistant', `⚠️ Erro ao se comunicar com o agente: ${err.message}`, 'Sistema', null);
+            } finally {
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                messageInput.focus();
+                chatLog.scrollTop = chatLog.scrollHeight;
+            }
+        }
+
+        function appendMessage(role, text, agentName = 'Você', execTime = null) {
+            const row = document.createElement('div');
+            row.className = `message-row ${role}`;
+
+            const isUser = role === 'user';
+            const avatarText = isUser ? 'Você' : 'CX';
+
+            let metaHtml = '';
+            if (!isUser) {
+                metaHtml = `
+                    <div class="meta-info">
+                        <span>Agente: <strong>${agentName || 'Cortex'}</strong></span>
+                        ${execTime ? `<span class="exec-tag">⚡ ${execTime}s</span>` : ''}
+                    </div>
+                `;
+            }
+
+            row.innerHTML = `
+                <div class="avatar ${isUser ? 'avatar-user' : 'avatar-assistant'}">${avatarText}</div>
+                <div>
+                    <div class="bubble">${formatMarkdown(text)}</div>
+                    ${metaHtml}
+                </div>
+            `;
+
+            chatLog.appendChild(row);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        function appendTypingIndicator() {
+            const id = 'typing-' + Date.now();
+            const row = document.createElement('div');
+            row.className = 'message-row assistant';
+            row.id = id;
+
+            row.innerHTML = `
+                <div class="avatar avatar-assistant">CX</div>
+                <div class="bubble typing-loader">
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                    <div class="typing-dot"></div>
+                </div>
+            `;
+
+            chatLog.appendChild(row);
+            return id;
+        }
+
+        function removeTypingIndicator(id) {
+            const elem = document.getElementById(id);
+            if (elem) elem.remove();
+        }
+    </script>
+</body>
+</html>
